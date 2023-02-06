@@ -1,0 +1,13 @@
+{% if vlan_1870 | length %}
+{% for vl in data_vlans.vlan %}
+vlan {{ vl.number }}
+name {{ vl.name }}
+{% endfor %}
+{% else %}
+vlan {{ mgmt_vlan.number }}
+name  {{ mgmt_vlan.name }}
+{% for vl in data_vlans.vlan %}
+vlan {{ vl.number }}
+name {{ vl.name }}
+{% endfor %}
+{% endif %}

@@ -1,0 +1,5 @@
+{% for intf in core_intf %}
+interface {{ intf }}
+switchport trunk allowed vlan add {{ vlans1 }}
+exit
+{% endfor %}

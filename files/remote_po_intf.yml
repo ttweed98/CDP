@@ -1,0 +1,3 @@
+
+remote_po_intf:
+  - interface port-channel 1

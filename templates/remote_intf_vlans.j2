@@ -1,0 +1,5 @@
+{% for intf in remote_hosts %}
+interface {{intf.hostname.remote_port }} 
+switchport trunk allowed vlan add {{vlans1}}
+exit
+{% endfor %}

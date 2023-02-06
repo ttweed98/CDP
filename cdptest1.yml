@@ -1,0 +1,69 @@
+---
+- name:
+  hosts: DXA1
+  gather_facts: false
+  connection: network_cli
+
+  tasks:
+    - name: "Run command and parse with textfsm"
+      ansible.utils.cli_parse:
+        command: show cdp neighbors detail
+        parser:
+          name: ansible.utils.textfsm
+          template_path: "/home/svc_nwautomation/Tony-Test/templates/cisco_ios_show_cdp_neighbors_detail.textfsm"
+        set_fact: neighbor_data
+
+    - name: "LIST OF Cisco Device"
+      set_fact:
+        Destination: "{{ neighbor_data | selectattr('SOFTWARE_VERSION', 'contains' , 'Cisco') }}"
+
+    - name: "LIST OF DIVICES"
+      set_fact:
+        devices: "{{ Destination | map(attribute='DESTINATION_HOST') | unique }}"
+
+    - name: Remove file (delete file)
+      ansible.builtin.shell:
+        chdir: /home/svc_nwautomation/Tony-Test/inventory
+        cmd: rm -rf VA006-*.yml
+
+    - name: "CREATE FILE"
+      lineinfile:
+        path: inventory/{{ item }}.yml
+        line: "---"
+        state: present
+        create: true
+      loop: "{{ devices }}"
+
+    - name: Make sure group wheel is not in the sudoers configuration
+      ansible.builtin.blockinfile:
+        path: inventory/{{ item }}.yml
+        create: true
+        block: |
+          Remote_Host: "{{ item }}"
+          Mgt_IP: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='MANAGEMENT_IP') }}"
+          Remote_Port: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='REMOTE_PORT') }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item }}"
+      loop: "{{ devices }}"
+
+    - name: "REMOVE UNWANTED LINE"
+      lineinfile:
+        path: inventory/{{ item }}.yml
+        regexp: "^#.*"
+        state: absent
+      loop: "{{ devices }}"
+
+    - name: Create Local Port connections to remote devices
+      ansible.builtin.blockinfile:
+        path: /home/svc_nwautomation/Tony-Test/group_vars/VA006.yml
+        create: true
+        block: |
+          Local_Port: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='LOCAL_PORT') }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item }}"
+      loop: "{{ devices }}"
+
+    - name: "REMOVE UNWANTED LINE in Group Var"
+      lineinfile:
+        path: /home/svc_nwautomation/Tony-Test/group_vars/VA006.yml
+        regexp: "^#.*"
+        state: absent
+      loop: "{{ devices }}"

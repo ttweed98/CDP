@@ -1,0 +1,30 @@
+---
+- name: TASK 21-A "SET FACT"
+  set_fact:
+    device_ip: "{{ item['host_ip'] }}"
+
+- name: TASK 21-B "SHOW PORT-CHANNELS ON REMOTE SWITCH TRUNKS"
+  cisco.ios.ios_command:
+    commands:
+      - "show run interface {{ item }} | include channel-group"
+  register: remote_port_po
+  loop: "{{ remote_intf }}"
+  delegate_to: "{{ device_ip }}"
+
+- name: TASK 21-C "CREATE LIST OF REMOTE CHANNELS"
+  set_fact:
+    ether_channel_remote: "{{ remote_port_po['results'] | map(attribute='stdout') | flatten | unique }}"
+
+- name: TASK 21-D "CREATE REMOTE PO INT LIST"
+  template: src=remote_port_copy.j2 dest=/home/ttweed98/CDP-Test/files/remote_po_intf.yml
+
+- name: TASK 21-E "MAKE REMOTE PORT CHANNELS AVAILABLE AS VARIABLE"
+  ansible.builtin.include_vars:
+    file: /home/ttweed98/CDP-Test/files/remote_po_intf.yml
+
+- name: TASK 21-F "Creating VLANS ON REMOTE PORT-CHANNEL INTERFACES"
+  include_tasks: create_remote_intf_vlans.yml
+  # when: item.stdout[0] != "" 
+  loop: "{{ remote_po_intf }}"
+
+

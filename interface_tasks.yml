@@ -1,0 +1,14 @@
+---
+
+    - name: "Check for vlans on interfaces"
+      cisco.ios.ios_config:
+        src: core_interfaces.j2
+      register: intf_output
+    
+    - name: "CREATE CORE INTERFACE VARIABLE"
+      set_fact:
+        intf_vlans: "{{ intf_output }}"
+
+    - name: "PRINT OUTPUT"
+      debug:
+        msg: "{{ intf_vlans }}"

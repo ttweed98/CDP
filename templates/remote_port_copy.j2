@@ -1,0 +1,5 @@
+
+remote_po_intf:
+{% for po in ether_channel_remote %}
+  - interface port-channel {{ po.split(' ')[1] | int }}
+{% endfor %}

@@ -1,0 +1,16 @@
+---
+
+- name: "Create static route on host"
+  hosts: VA006
+  gather_facts: false
+  connection: network_cli
+  vars: 
+    ip_route:
+      route:
+        - ip: 10.122.128.0
+          subnet: 255.255.192.0
+          dfg: 10.122.128.254
+
+  tasks:
+    - name: Add static route to host with JINJA"
+      template: src="static_route.j2" dest="static-route.txt"

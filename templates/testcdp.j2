@@ -1,0 +1,10 @@
+---
+remote_hosts:
+{% for device in devices %}
+  - hostname: {{ device }}
+    host_ip:  {{ Destination | selectattr('DESTINATION_HOST', 'equalto' , device) | map(attribute='MANAGEMENT_IP') | unique | first }}
+    remote_port: {{ Destination | selectattr('DESTINATION_HOST', 'equalto' , device) | map(attribute='REMOTE_PORT') | list }}
+    
+{% endfor %}
+
+

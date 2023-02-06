@@ -1,0 +1,20 @@
+---
+
+- name: "SHOW VLANS ON CORE SWITCH"
+  cisco.ios.ios_command:
+    commands: "show vlan brief | include 1870"
+  register: vlan_output
+  delegate_to: "{{ item['host_ip'] }}"
+
+- name: "CREATE MGMT VLAN VARIABLE"
+  set_fact:
+    vlan_1870: "{{ vlan_output['stdout'] | first}}"
+
+- name: "DEBUG"
+  debug:
+    msg: "{{ vlan_1870 }}"
+
+- name: "CREATE VLANS ON REMOTE HOSTS"
+  cisco.ios.ios_config:
+    src: vlans.j2
+  delegate_to: "{{ item['host_ip'] }}"

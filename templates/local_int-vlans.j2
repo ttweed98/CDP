@@ -1,0 +1,7 @@
+Core:
+  Interface:
+{% for ip, intf in hosts.items() %}
+{% for v in intf.Local_Port %}
+    - {{ v }}
+{% endfor %}
+{% endfor %}

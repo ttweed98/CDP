@@ -1,0 +1,5 @@
+hosts:
+{% for device in devices %}
+  {{ Destination | selectattr('DESTINATION_HOST', 'equalto' , device) | map(attribute='MANAGEMENT_IP') | unique | first}}:
+    Local_Port: {{ Destination | selectattr('DESTINATION_HOST', 'equalto' , device) | map(attribute='LOCAL_PORT') | list}}
+{% endfor %}

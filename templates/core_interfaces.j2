@@ -1,0 +1,3 @@
+{% for int in core_intf %}
+do show run interface {{int}} | include switchport trunk allowed
+{% endfor %}

@@ -1,0 +1,9 @@
+---
+
+remote_hosts:
+{% for host in Destination %}
+  hostname: {{ host['DESTINATION_HOST'] }}
+    remote_port: {{ Destination | selectattr('DESTINATION_HOST', 'equalto' , host) | map(attribute='REMOTE_PORT') | list }}
+
+{% endfor %}
+    

@@ -1,0 +1,103 @@
+---
+- name: "PLAY 1"
+  hosts: VA006
+  gather_facts: false
+  connection: network_cli
+
+  tasks:
+    - name: TASK 1 - "RUN COMMAND AND PARSE WITH TEXTFSM"
+      ansible.utils.cli_parse:
+        command: show cdp neighbors detail
+        parser:
+          name: ansible.utils.textfsm
+          template_path: "/home/ttweed98/CDP-Test/ntc-templates/ntc_templates/templates/cisco_ios_show_cdp_neighbors_detail.textfsm"
+        set_fact: neighbor_data
+      
+
+    - name: TASK 2 - "LIST ATTACHED CISCO DEVICES"
+      set_fact:
+        Destination: "{{ neighbor_data | selectattr('SOFTWARE_VERSION', 'contains' , 'Cisco') }}"
+
+    - name: TASK 3 - "CREATE LIST OF HOSTS"
+      set_fact:
+        devices: "{{ Destination | map(attribute='DESTINATION_HOST') | unique }}"
+
+    - name: TASK 4 - "SHOW VLANS ON CORE SWITCH"
+      cisco.ios.ios_command:
+        commands: "show vlan brief | include 1870"
+      register: vlan_output
+
+    - name: TASK 5 - "CREATE MGMT VLAN VARIABLE"
+      set_fact:
+        vlan_1870: "{{ vlan_output['stdout'] | first}}"
+ 
+    - name: TASK 6 - "CREATE VLANS ON CORE SWITCH"
+      cisco.ios.ios_config:
+        src: vlans.j2
+
+    - name: TASK 7 - "CREATE LIST OF LOCAL INTERFACE PORTS TO FILE"
+      template: src=local_port.j2 dest=/home/ttweed98/CDP-Test/files/core_intf.yml
+
+    - name: TASK 8 - "MAKE LOCAL INTERFACES AVAILABLE AS VARIABLE"
+      ansible.builtin.include_vars:
+        file: /home/ttweed98/CDP-Test/files/core_intf.yml
+
+    - name: TASK 9 - "SHOW PORT-CHANNELS ON CORE SWITCH TRUNKS"
+      cisco.ios.ios_command:
+        commands:
+          - "show run interface {{ item }} | include channel-group"
+      register: port_po
+      loop: "{{ core_intf }}"
+
+    - name: TASK 10 - "CREATE LIST OF CORE HOSTS"
+      set_fact:
+        ether_channel: "{{ port_po['results'] | map(attribute='stdout') | flatten | unique }}"
+
+    - name: TASK 11 - "CREATE CORE PO INT LIST"
+      template: src=local_port_copy.j2 dest=/home/ttweed98/CDP-Test/files/core_po_intf.yml
+
+    - name: TASK 12 - "MAKE LOCAL PORT CHANNELS AVAILABLE AS VARIABLE"
+      ansible.builtin.include_vars:
+        file: /home/ttweed98/CDP-Test/files/core_po_intf.yml
+
+    - name: TASK 13 - "SHOW VLANS ON CORE PORT-CHANNEL TRUNKS"
+      cisco.ios.ios_command:
+        commands: 
+          - "show run {{ item }} | include switchport trunk allowed"
+      register: po_output
+      loop: "{{ po_intf }}"
+
+    - name: TASK 14 - "Creating VLANS ON CORE INTERFACES"
+      include_tasks: create_intf_vlans.yml
+      when: item.stdout[0] != "" 
+      loop: "{{ po_output['results'] }}"
+    
+    - name: TASK 15 - "CREATING DYNAMIC REMOTE HOSTS FILE WITH JINJA"
+      template: src=testcdp.j2 dest=/home/ttweed98/CDP-Test/files/remote_hosts.yml
+
+    - name: TASK 16 - "MAKE REMOTE HOSTS FILE AVAILABLE"
+      ansible.builtin.include_vars:
+        file: /home/ttweed98/CDP-Test/files/remote_hosts.yml
+
+    - name: TASK 17 - "ADD ALL REMOTE HOSTS TO VA006 GROUP"
+      ansible.builtin.add_host:
+        hostname: "{{ item['hostname'] }}"
+        ansible_host: "{{ item['host_ip'] }}"
+        groups: VA006
+        interfaces: "{{ item['remote_port'] }}"
+      loop: "{{ remote_hosts }}"
+
+    - name: TASK 18 - "CREATE VLANS ON REMOTE HOSTS"
+      include_tasks: "vlan_tasks.yml"
+      loop: "{{ remote_hosts }}"
+
+    - name: TASK 19 - "CREATE LIST OF REMOTE INTERFACE PORTS TO FILE"
+      template: src=remote_port.j2 dest=/home/ttweed98/CDP-Test/files/remote_intf.yml
+
+    - name: TASK 20 -"MAKE REMOTE INTERFACES AVAILABLE"
+      ansible.builtin.include_vars:
+        file: /home/ttweed98/CDP-Test/files/remote_intf.yml
+
+    - name: TASK 21 - "SHOW VLANS ON REMOTE SWITCH TRUNKS"
+      include_tasks: show_remote_port-channels.yml
+      loop: "{{ remote_hosts }}"

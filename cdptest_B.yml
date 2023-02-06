@@ -1,0 +1,214 @@
+---
+- name: "PLAY 1"
+  hosts: DXA1
+  gather_facts: false
+  connection: network_cli
+
+  tasks:
+    - name: "Run command and parse with textfsm"
+      ansible.utils.cli_parse:
+        command: show cdp neighbors detail
+        parser:
+          name: ansible.utils.textfsm
+          template_path: "/home/ttweed98/CDP-Test/ntc-templates/ntc_templates/templates/cisco_ios_show_cdp_neighbors_detail.textfsm"
+        set_fact: neighbor_data
+
+    - name: "LIST OF Cisco Device"
+      set_fact:
+        Destination: "{{ neighbor_data | selectattr('SOFTWARE_VERSION', 'contains' , 'Cisco') }}"
+
+    - name: "LIST OF DEVICES"
+      set_fact:
+        devices: "{{ Destination | map(attribute='DESTINATION_HOST') | unique }}"
+  
+    # - name: "CREATE VLANS ON CORE SWITCH"
+    #   cisco.ios.ios_config:
+    #     src: vlans.j2
+
+    - name: "CREATE LIST OF LOCAL INTERFACE PORTS TO FILE"
+      template: src=local-port.j2 dest=/home/ttweed98/CDP-Test/files/core-intf.yml
+
+    - name: "MAKE LOCAL INTERFACES AVAILABLE"
+      ansible.builtin.include_vars:
+        file: /home/ttweed98/CDP-Test/files/core-intf.yml
+
+    - name: "CREATE LIST OF REMOTE INTERFACE PORTS TO FILE"
+      template: src=remote-port.j2 dest=/home/ttweed98/CDP-Test/files/remote-intf.txt
+ 
+    # - name: "CREATE VLANS ON LOCAL INTERFACES"
+    #   cisco.ios.ios_config:
+    #     src: core-int-vlans.j2
+
+    # - name: "CREATING DYNAMIC HOSTS FILE WITH JIJNA"
+    #   template: src=testcdp.j2 dest=/home/ttweed98/CDP-Test/files/remote_hosts.yml
+
+    # - name: "Create interface list with conencted devices using CDP Neighbors"
+    #   ansible.builtin.include_vars:
+    #     file: /home/ttweed98/CDP-Test/files/remote_hosts.yml
+
+    - name: "Create test hosts file with CDP Neighbors"
+      template: src=hosts.j2 dest=/home/ttweed98/CDP-Test/hosts
+
+- name: " CREATE VLANS ON REMOTE HOSTS"
+  hosts: REMOTE
+  gather_facts: false
+  connection: network_cli 
+
+  tasks:
+    # - name: "ADD VLANS TO REMOTE HOSTS"
+    #   cisco.ios.ios_config:
+    #     src: vlans.j2
+
+    - name: "MAKE LOCAL INTERFACES AVAILABLE"
+      ansible.builtin.include_vars:
+        file: /home/ttweed98/CDP-Test/files/remote-intf.txt
+
+    - name: "CREATE VLANS ON LOCAL INTERFACES"
+      cisco.ios.ios_config:
+        src: core-int-vlans.j2
+    # - name: "CREATE VLANS ON REMOTE HOSTS"
+    #   cisco.ios.ios_config:
+    #     src: vlans.j2
+    #   loop: "{{ remote_hosts }}"
+
+    # - name: Add all hosts running this playbook to the done group
+    #   ansible.builtin.add_host:
+    #     hostname: "{{ item['hostname'] }}"
+    #     ansible_host: "{{ item['host_ip'] }}"
+    #     groups: VA006
+    #     interfaces: "{{ item['remote_port'] }}"
+    #   loop: "{{ remote_hosts }}"
+
+    # - name: "CREATE VLANS ON CORE SWITCH"
+    #   cisco.ios.ios_config:
+    #     src: vlans.j2         
+
+    # - name: "CREATE VLANS ON CORE INTERFACES"
+    #   cisco.ios.ios_config:
+    #     src: vlans.j2          
+
+    # - name: Print
+    #   debug: 
+    #     msg: "{{ Destination }}"
+
+    # - name: Print hosts
+    #   debug:
+    #     msg: "{{ devices }}"
+    # - name: "Create hosts with CDP Neighbors"
+    #   template: src=hosts.j2 dest=/home/ttweed98/CDP-Test/hosts
+
+    # - name: "Create interface list with conencted devices using CDP Neighbors"
+    #   ansible.builtin.include_vars:
+    #     file: /home/ttweed98/CDP-Test/host-vars/CORE.txt
+
+    # - name: "Create interface list with conencted devices using CDP Neighbors"
+    #   template: src=local_int-vlans.j2 dest=/home/ttweed98/CDP-Test/host-vars/CORE1.txt
+
+    # - name: "Add DMZ VLANS as variables"
+    #   ansible.builtin.include_vars:
+    #     file: /home/ttweed98/CDP-Test/files/vlans.txt
+
+    # - name: "Make interface variables available"
+    #   ansible.builtin.include_vars:
+    #     file: /home/ttweed98/CDP-Test/host-vars/CORE1.txt
+
+    # - name: "Create vlans"
+    #   template: src=host-vlans.j2 dest=/home/ttweed98/CDP-Test/core-vlans.txt
+#     - name: "Add Vlans to trunks on Core switch"
+#       cisco.ios.ios_config:
+#         src: core-vlans.j2
+
+# - name: Test connection to remote hosts"
+#   hosts: VA006
+#   gather_facts: false
+#   connection: network_cli
+
+#   tasks:
+#     - name: "Add DMZ VLANS as variables"
+#       ansible.builtin.include_vars:
+#         file: /home/ttweed98/CDP-Test/files/vlans.txt
+
+#     - name: "Make interface variables available"
+#       ansible.builtin.include_vars:
+#         file: /home/ttweed98/CDP-Test/host-vars/CORE1.txt
+
+#     - name: "Create vlans"
+#       cisco.ios.ios_config:
+#         src: host-vlans.j2
+
+#     - name: "Add Vlans to trunks on Remote switches"
+#       cisco.ios.ios_config:
+#         lines:
+#           - "switchport trunk allowed vlan add 1870,1875,1880,1890"
+#         parents: "{{ item }}"
+#       with_items:
+#         - interface port-channel1
+#     - name: "Add Vlans to trunks on Core switch"
+#       template: src=core-vlans.j2 dest=dest=/home/ttweed98/CDP-Test/core-vlans.txt
+# - name: "PLAY 2"
+#   hosts: CORE
+#   gather_facts: false
+#   connection: network_cli
+
+#   tasks:
+#     - name: "Add vlans test"
+#       template: src=vlans.j2 dest=/home/ttweed98/CDP-Test/vlans.txt
+
+#     - name: "Print output"
+#       debug:
+#         msg: "{{ vlan_output }}"
+# - name: Remove file (delete file)
+#   ansible.builtin.shell:
+#     chdir: /home/svc_nwautomation/Tony-Test/inventory
+#     cmd: rm -rf *.yml
+
+# - name: "CREATE FILE"
+#   lineinfile:
+#     path: inventory/{{ item }}.yml
+#     line: "---"
+#     state: present
+#     create: true
+#   loop: "{{ devices }}"
+
+# - name:
+
+# - name: Make sure group wheel is not in the sudoers configuration
+#   set_fact:
+#     Remote_Host: "{{ item }}"
+#     Mgt_IP: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='MANAGEMENT_IP') }}"
+#     Remote_Port: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='REMOTE_PORT') | list }}"
+#   loop: "{{ devices }}"
+
+# - name: Make sure group wheel is not in the sudoers configuration
+#   ansible.builtin.blockinfile:
+#     path: inventory/{{ item }}.yml
+#     create: true
+#     block: |
+#           Remote_Host: "{{ item }}"
+#           Mgt_IP: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='MANAGEMENT_IP') }}"
+#           Remote_Port: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='REMOTE_PORT') | list }}"
+#     marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item }}"
+#   loop: "{{ devices }}"
+
+# - name: "REMOVE UNWANTED LINE"
+#   lineinfile:
+#     path: inventory/{{ item }}.yml
+#     regexp: "^#.*"
+#     state: absent
+#   loop: "{{ devices }}"
+
+# - name: Create Local Port connections to remote devices
+#   ansible.builtin.blockinfile:
+#     path: /home/svc_nwautomation/Tony-Test/group_vars/VA006.yml
+#     create: true
+#     block: |
+#           Local_Port: "{{ Destination | selectattr('DESTINATION_HOST', 'equalto' , item) | map(attribute='LOCAL_PORT') }}"
+#     marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item }}"
+#   loop: "{{ devices }}"
+
+# - name: "REMOVE UNWANTED LINE in Group Var"
+#   lineinfile:
+#     path: /home/svc_nwautomation/Tony-Test/group_vars/VA006.yml
+#     regexp: "^#.*"
+#     state: absent
+#   loop: "{{ devices }}"

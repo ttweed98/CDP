@@ -1,0 +1,7 @@
+
+remote_intf:
+{% for device in devices %}
+{% for intf in  Destination | selectattr('DESTINATION_HOST', 'equalto' , device) | map(attribute='REMOTE_PORT') | list %}
+  - {{ intf }}
+{% endfor %}
+{% endfor %}

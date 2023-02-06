@@ -1,0 +1,28 @@
+---
+remote_hosts:
+  - hostname: VA006-XA1.cisco.com
+    host_ip:  10.0.0.242
+    remote_port: ['GigabitEthernet1/2', 'GigabitEthernet1/1']
+    
+  - hostname: VA006-XAA1.cisco.com
+    host_ip:  10.0.0.241
+    remote_port: ['GigabitEthernet1/2', 'GigabitEthernet1/1']
+    
+  - hostname: VA006-XAB1.cisco.com
+    host_ip:  10.0.0.243
+    remote_port: ['GigabitEthernet1/2', 'GigabitEthernet1/1']
+    
+  - hostname: VA006-XAC1.cisco.com
+    host_ip:  10.0.0.244
+    remote_port: ['GigabitEthernet1/2', 'GigabitEthernet1/1']
+    
+  - hostname: VA006-XAD1.cisco.com
+    host_ip:  10.0.0.245
+    remote_port: ['GigabitEthernet1/2', 'GigabitEthernet1/1']
+    
+  - hostname: VA006-XAE1.cisco.com
+    host_ip:  10.0.0.246
+    remote_port: ['GigabitEthernet1/1', 'GigabitEthernet1/2']
+    
+
+

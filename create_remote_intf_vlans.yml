@@ -1,0 +1,7 @@
+---
+- name: TASK 21-G "CREATING VLANS ON REMOTE INTERFACES"
+  cisco.ios.ios_config:
+    lines:
+      - switchport trunk allowed vlan add "{{vlans1}}"
+    parents: "{{ item }}"
+  delegate_to: "{{ device_ip }}"

@@ -1,0 +1,7 @@
+
+core_intf:
+{% for device in devices %}
+{% for intf in  Destination | selectattr('DESTINATION_HOST', 'equalto' , device) | map(attribute='LOCAL_PORT') | list %}
+  - {{ intf }}
+{% endfor %}
+{% endfor %}

@@ -1,0 +1,32 @@
+ansible_user: "tony"
+ansible_password: "cisco"
+ansible_network_os: ios
+
+
+vlans1: 1870,1875,1880,1890
+
+vlans2: 1875,1880,1890
+
+vlan_wifi: 1880
+
+mgmt_vlan:
+  number: 1870
+  name: DMZ_MGT
+
+data_vlans:
+  vlan:
+   
+    - number: 1875
+      name: Koch_Edge
+    
+    - number: 1880
+      name: DMZ_IOT_WIRELESS
+    
+    - number: 1890
+      name: DMZ_IOT_WIRED 
+
+ip_route:
+  route:
+    - ip: 10.122.128.0
+      subnet: 255.255.192.0
+      dfg: 10.122.128.254

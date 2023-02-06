@@ -1,0 +1,29 @@
+---
+- name: "SET FACT"
+  set_fact:
+    device_ip: "{{ item['host_ip'] }}"
+
+- name: "SHOW PORT-CHANNELS ON REMOTE SWITCH TRUNKS"
+  cisco.ios.ios_command:
+    commands: 
+      - "show run interface {{ item }} | include switchport trunk allowed"
+  register: remote_port_po
+  loop: "{{ remote_intf }}"
+  delegate_to: "{{ device_ip }}"
+
+- name: "CREATE LIST OF REMOTE HOSTS"
+  set_fact:
+    ether_channel_remote: "{{ remote_port_po['results'] | map(attribute='stdout') | flatten | unique }}"
+
+- name: "CREATE REMOTE PO INT LIST"
+  template: src=remote_port_copy.j2 dest=/home/ttweed98/CDP-Test/files/remote_po_intf.yml
+
+- name: "MAKE LOCAL PORT CHANNELS AVAILABLE AS VARIABLE"
+  ansible.builtin.include_vars:
+    file: /home/ttweed98/CDP-Test/files/remote_po_intf.yml
+
+- name: "Creating VLANS ON REMOTE INTERFACES"
+  include_tasks: create_remote_intf_vlans.yml
+  when: item.stdout[0] != "" 
+  loop: "{{ interface_output['results'] }}"
+

@@ -1,0 +1,13 @@
+---
+
+- name: "CREATE LOCAL INTERFACE VARIABLE"
+  set_fact:
+    trunk_port: "interface port-channel {{ stdout[0] }}"
+  
+
+# - name: "CREATING VLANS ON LOCAL INTERFACES"
+#   cisco.ios.ios_config:
+#     lines:
+#       - switchport trunk allowed vlan add "{{vlans1}}"
+#     parents: "{{ trunk_port }}"
+

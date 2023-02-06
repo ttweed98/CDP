@@ -1,0 +1,12 @@
+show run interface GigabitEthernet0/3 | include switchport trunk allowed
+show run interface GigabitEthernet1/0 | include switchport trunk allowed
+show run interface GigabitEthernet0/2 | include switchport trunk allowed
+show run interface GigabitEthernet0/1 | include switchport trunk allowed
+show run interface GigabitEthernet1/1 | include switchport trunk allowed
+show run interface GigabitEthernet1/2 | include switchport trunk allowed
+show run interface GigabitEthernet2/0 | include switchport trunk allowed
+show run interface GigabitEthernet1/3 | include switchport trunk allowed
+show run interface GigabitEthernet2/2 | include switchport trunk allowed
+show run interface GigabitEthernet2/1 | include switchport trunk allowed
+show run interface GigabitEthernet3/0 | include switchport trunk allowed
+show run interface GigabitEthernet2/3 | include switchport trunk allowed

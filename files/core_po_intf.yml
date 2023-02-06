@@ -1,0 +1,8 @@
+
+po_intf:
+  - interface port-channel 2
+  - interface port-channel 1
+  - interface port-channel 3
+  - interface port-channel 4
+  - interface port-channel 5
+  - interface port-channel 6
